@@ -42,8 +42,8 @@ print(count)
 temp_date_df = df.groupby('patient_id').first().reset_index()
 
 # Find gap between diagnosis_date and first_mtx date
-# Filter patients where absolute value of difference is more than 6 months
 temp_date_df['date_diff_days'] = (temp_date_df['diagnosis_date'] - temp_date_df['first_mtx_date']) / np.timedelta64(1, 'D')
+# Filter patients where absolute gap/difference is more than 6 months
 patients_mtx_diag_gap = temp_date_df[abs(temp_date_df['date_diff_days']) > 30.44*6]["patient_id"]
 
 df[df['patient_id'].isin(patients_mtx_diag_gap)].to_csv("../data/filtered_mtx_fail/patients_mtx_diag_gap.csv")

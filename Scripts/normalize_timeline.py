@@ -18,7 +18,7 @@ print(count)
 mtx_starts = df[(df['Event'] == 'Prescription_start') & (df['Value'].isin(['DMARD_MTX_SC','DMARD_MTX', 'DMARD_MTX_IM']))]
 
 # First time each patient took mtx
-first_mtx = (mtx_starts.groupby('patient_id')['Date'].min().rename('first_mtx_date').reset_index())
+first_mtx = mtx_starts.groupby('patient_id')['Date'].min().rename('first_mtx_date').reset_index()
 
 # Attach first_mtx_date to all rows of that patient
 df_mtx = df.copy().merge(first_mtx, on='patient_id', how='left')

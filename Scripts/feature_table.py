@@ -17,36 +17,34 @@ df_status['first_mtx_date'] = pd.to_datetime(df_status['first_mtx_date'])
 print(f"Number of patients at start: {df_status["patient_id"].nunique()}")
 
 
-# Extract diagnosis and age_at_diagnosis from patient_filtered.csv
+# ---- Extract diagnosis and age_at_diagnosis from patient_filtered.csv ---- #
 df_patients = pd.read_csv(path + 'patients_filtered.csv', usecols=['patient_id', 'Diagnosis', 'Age_at_diagnosis'])
-# Limit to just one row per patient
+# Limit to just one row per patient and merge
 df_patients = df_patients.groupby('patient_id').first().reset_index()
-
 df_status = df_status.merge(df_patients, on='patient_id', how='left')
 
 print(f"Number of patients after adding patient info: {df_status["patient_id"].nunique()}")
 
+
 # ---- Extract patient sex from logistics ---- #
 df_logistics = pd.read_csv(path + 'logistics_filtered.csv', usecols=['patient_id', 'Koen'])
-# Limit to just one row per patient
+# Limit to just one row per patient and merge
 df_logistics = df_logistics.drop_duplicates()
-
 df_status = df_status.merge(df_logistics, on='patient_id', how='left')
 
 print(f"Number of patients after adding sex: {df_status["patient_id"].nunique()}")
 
 # ---- Column for whether biologic was added within first year ---- #
 df_biologic = pd.read_csv(path + 'biologic_added.csv', usecols=['patient_id', 'biologic_added']).drop_duplicates()
-
 df_status = df_status.merge(df_biologic, on='patient_id', how='left')
 
 print(f"Number of patients after adding biologic_added: {df_status["patient_id"].nunique()}")
 
+
 # ---- Extract info of antibodies ---- #
 # Extract patient igm from logistics
 igm = pd.read_csv(path +'logistics_filtered.csv', usecols=['patient_id', 'IgM_RF', 'Diagnosis_date_con', 'IgM_RF_aar']).drop_duplicates()
-
-# Limit to just one row per patient
+# Find the igm year closest to diagnosis date and merge
 X = igm.copy()
 X = X[X['patient_id'].isin(df_status['patient_id'])]
 X['Diagnosis_date_con'] = pd.to_datetime(X['Diagnosis_date_con'])
@@ -62,7 +60,7 @@ print(f"Number of patients after adding igm: {df_status["patient_id"].nunique()}
 
 # Extract patient accp from logistics
 accp = pd.read_csv(path +'logistics_filtered.csv', usecols=['patient_id', 'Anti_CCP', 'Diagnosis_date_con', 'Anti_CCP_aar'])
-# Limit to just one row per patient
+# Find the accp year closest to diagnosis date and merge
 X = accp.copy()
 X = X[X['patient_id'].isin(df_status['patient_id'])]
 X['Diagnosis_date_con'] = pd.to_datetime(X['Diagnosis_date_con'])
@@ -79,6 +77,7 @@ print(f"Number of patients after adding anti-ccp: {df_status["patient_id"].nuniq
 # Map the categories to 0 and 1
 df_status["IgM_RF"] = df_status["IgM_RF"].map({"Neg" : 0, "Pos" : 1})
 df_status["Anti_CCP"] = df_status["Anti_CCP"].map({"Neg" : 0, "Pos" : 1})
+
 
 # ---- Extract info from visits ---- #
 visits_selected_vars = ['patient_id', 'Visit_date', 'CRP', 'Haq', 'MDHAQ', 'DAS_28_CRP', 'Vas_patient_global',

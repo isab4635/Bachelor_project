@@ -26,6 +26,11 @@ df_mtx = df.copy().merge(first_mtx, on='patient_id', how='left')
 # Normalized time: months since first MTX
 df_mtx['months_since_mtx'] = (df_mtx['Date'] - df_mtx['first_mtx_date']) / np.timedelta64(1, 'D')/30.44
 
+# Print number of patients before dropping those with no MTX start
+count = df_mtx["patient_id"].nunique()
+print("Number of patients before dropping due to mtx start missing: ")
+print(count)
+
 # Drop those with no first_mtx_date
 df_mtx = df_mtx.dropna(subset=['months_since_mtx'])
 
@@ -37,7 +42,7 @@ print(count)
 
 # ---- Add diagnosis date as its own column ---- #
 # Get diagnosis dates
-df_diag_date = df[df['Event'] == 'Diagnosis_date'].copy()
+df_diag_date = df[df['Event'] == 'Diagnosis_date_con'].copy()
 df_diag_date['Value'] = pd.to_datetime(df_diag_date['Value'])
 
 # Earliest diagnosis date for each patient

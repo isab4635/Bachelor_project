@@ -29,7 +29,7 @@ max_visit_dates = df.loc[df.groupby("patient_id")["Date"].idxmax()]
 patients_no_follow_up = max_visit_dates[max_visit_dates["Date"] <= max_visit_dates["first_mtx_date"]]
 
 patients_no_follow_up.to_csv("../data/filtered_mtx_fail/patients_no_follow_up.csv")
-df = df[~df["patient_id"].isin(patients_no_follow_up)]
+df = df[~df["patient_id"].isin(patients_no_follow_up["patient_id"])]
 
 # Print number of patients after removing those with no check-in
 count = df["patient_id"].nunique()

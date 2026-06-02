@@ -11,7 +11,6 @@ df = pd.read_csv('../data/timeline_diagnosis_after_2015.csv')
 X = df.copy()
 
 X_cdai = X[X['Event'] == 'CDAI']
-#X_cdai.Value = X_cdai.Value.str.replace(",", ".") #donein preprocessing now
 
 x = 0
 fig, ax = plt.subplots(constrained_layout=True)
@@ -56,20 +55,6 @@ for patient in X_cdai['patient_id'].unique()[:100]:
                        first_year = start + pd.DateOffset(months=12)
                        MTX_stop = MTX_stop[pd.to_datetime(MTX_stop['Date']) <= first_year]
 
-#                stops = pd.to_datetime(MTX_stop['Date'], format = "%Y-%m-%d")
-#                start = starts.values[0:1]
-#                difference = (stops.values[:,None] - start) / np.timedelta64(1, 'D')
-#                mask_2 = (difference <= 365)
-#                MTX_stop = MTX_stop[~mask_2.any(axis=0)]
-
-        # for entry in MTX_start["Date"]:
-        #         if MTX_stop['Date'].empty:
-        #                 continue
-        #         for stop_entry in MTX_stop["Date"]:
-        #                 if 0 <= ((pd.to_datetime(entry, format = "%Y-%m-%d") - pd.to_datetime(stop_entry, format = "%Y-%m-%d")) / np.timedelta64(1, 'D')) <= 90:
-        #                         #excluding the less than 3 month break in prescription:
-        #                         MTX_stop = MTX_stop[~MTX_stop['Date'] == stop_entry]
-
 #checking if more than one diagnosis date
         if len(MTX_start) > 1:
                 print(f"Warning: Multiple prescription starts found for patient {patient}. Using the first one for MTX.")
@@ -79,15 +64,9 @@ for patient in X_cdai['patient_id'].unique()[:100]:
                 MTX_start = MTX_start.iloc[0:1]
 #normalizing
         MTX_date = MTX_start.iloc[:, 1]
-        #print(MTX_date)
         MTX_date = pd.to_datetime(MTX_date, format = "%Y-%m-%d")
-##focusing ony on MTX stop during the first year since that start
-#        MTX_stop = MTX_stop[MTX_stop['Date'] <= (MTX_date + pd.DateOffset(months=12))]
-        #print(pd.to_datetime(subset_cdai.iloc[:, 1], format = "%Y-%m-%d").values)
         x_dates = (pd.to_datetime(subset_cdai.iloc[:, 1], format = "%Y-%m-%d").values - MTX_date.values) / np.timedelta64(1, 'D')/30.44
-#focusing ony on MTX stop during the first year since that start
-       # MTX_stop = MTX_stop[0, :]
-#        MTX_stop = MTX_stop[pd.to_datetime(MTX_stop['Date'], format = "%Y-%m-%d") <= (MTX_date + pd.DateOffset(months=12))]
+
         if MTX_stop['Value'].empty:
                 colours = 'green'
         else:
@@ -100,7 +79,6 @@ custom_lines = [Line2D([0], [0], color='green', lw=4),
                 Line2D([0], [0], color='red', lw=4)]
 ax.legend(custom_lines, ['MTX continued', 'MTX stopped'])
 ax.set_title('CDAI over time normalized to MTX start date (months) - diagnosis after 2015')
-#plt.xlim(None, 13) #no limit dating back
 plt.xlim(-1,13)
 plt.xticks(rotation=90)
 plt.show()

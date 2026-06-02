@@ -70,14 +70,54 @@ df_sae_stop = df_saes[["patient_id", "Sae_stop_date", "Sae_number"]].copy().drop
 df_sae_stop.columns = ["patient_id", "Date", "Value"]
 df_sae_stop["Event"] = "Sae_stop"
 
-
 # Combine all the dataframes
 df_long = pd.concat([df_long, df_start, df_stop, df_yr_long, df_sae_start, df_sae_stop], ignore_index=True)
-# Fix date format
-#df_long['Date'] = pd.to_datetime(df_long['Date'].str[:9], format='%d%b%Y')
 
 # Sort them according to patient, then date, then event
 df_long.sort_values(by=["patient_id", "Date"], inplace=True)
 
-# Save to new csv file
-df_long.to_csv("../data/timeline_style.csv", index = False)
+df = df_long
+df['Date'] = pd.to_datetime(df['Date'], format = 'mixed')
+
+# ---- Normalize to MTX ---- #
+# Filter to mtx start events
+mtx_starts = df[(df['Event'] == 'Prescription_start') & (df['Value'].isin(['DMARD_MTX_SC','DMARD_MTX', 'DMARD_MTX_IM']))]
+
+# First time each patient took mtx
+first_mtx = (mtx_starts.groupby('patient_id')['Date'].min().rename('first_mtx_date').reset_index())
+
+# Attach first_mtx_date to all rows of that patient
+df_mtx = df.copy().merge(first_mtx, on='patient_id', how='left')
+count = df_mtx["patient_id"].nunique()
+print("Number of patients before dropping due to mtx start missing: ")
+print(count)
+
+# Normalized time: months since first MTX
+df_mtx['months_since_mtx'] = (df_mtx['Date'] - df_mtx['first_mtx_date']) / np.timedelta64(1, 'D')/30.44
+#df_mtx = df_mtx.drop('first_mtx_date', axis = 1)
+
+# Drop those with no first_mtx_date
+df_mtx.loc[df_mtx['months_since_mtx'].isnull()].to_csv("../data/normalized_excluded/nan_mtx_date_after_2015.csv")
+df_mtx = df_mtx.dropna(subset=['months_since_mtx'])
+
+#print the amount of patients dropped due to MTX prescription missing
+count = df_mtx["patient_id"].nunique()
+print("Number of patients after the drop: ")
+print(count)
+
+# Get diagnosis dates
+df_diag_date = df[df['Event'] == 'Diagnosis_date_con'].copy()
+df_diag_date['Value'] = pd.to_datetime(df_diag_date['Value'])
+
+# Earliest diagnosis date for each patient
+first_diag = df_diag_date.groupby('patient_id')['Value'].min().rename('diagnosis_date').reset_index()
+# Attach diagnosis date to all rows of that patient
+df_mtx = df_mtx.merge(first_diag, on='patient_id', how='left')
+
+#print the final amount of patients
+count = df_mtx["patient_id"].nunique()
+print("Number of patients after adding diagnosis: ")
+print(count)
+
+# Save to csv
+df_mtx.to_csv('../data/timeline_mtx_normalized.csv', index=False)

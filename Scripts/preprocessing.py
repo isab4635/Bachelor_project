@@ -1,7 +1,12 @@
 #!/usr/local/anaconda3-2024.10-1/bin/python3
+# This script performs data preprocessing and filtering for the RA dataset. It checks for future dates and unexpected values in the 
+# datasets, and excludes patients with wrong or multiple diagnoses. The filtered datasets are saved for further analysis.
+
+# Import necessary libraries
 import pandas as pd
 import numpy as np
 
+# Define functions for checking future dates and unexpected values
 def if_not_future_date(df, columns):
     for column in columns:
         df[column] = pd.to_datetime(df[column], errors='coerce')
@@ -32,15 +37,10 @@ def if_unexpected_values(df, column, expected_values):
         df.loc[~mask, column] = "NA"
 
 #MASKSSSSSS
-
-#masks excluding
-#for only RA as diagnosis
+# Keep only patients with RA diagnosis
 RA_diagnosis = ['DIAGNOSIS_M05_9', 'DIAGNOSIS_M06_0', 'DIAGNOSIS_M06_9'] # df=everywhere but hospitals  #Diagnosis
-
 review_state = ['private', 'inactive', 'NA'] # df=everywhere but hospitals  #Review_state_patient
-#the oldest danish person 112
-age = [str(i) for i in range(113)] + ["NA"] # df=everywhere but hospitals  #Age_at_diagnosis
-#other masks
+age = [str(i) for i in range(113)] + ["NA"] # df=everywhere but hospitals  #Age_at_diagnosis #the oldest danish person 112
 department_change = ["0", "1", "NA"]
 sae_numbers = ["1'", "2'", "3'", "4'", "1", "2", "3", "4", "5_2011", "6_2011", "7_2011", "8_2016", "NA"]
 sae_cont = ["NO", "YES", "NA"]
@@ -62,6 +62,7 @@ RA_alert = ["INCREASED", "NEVER_POSSIBLE", "NOT_POSSIBLE", "OTHER", "PATIENT_SAY
 patients_multiple_diagnosis = set()
 patients_wrong_diagnosis = set()
 
+# Loop through datasets and apply filters
 datasets = ["logistics", "patients", "treatments", "visits", "yearly_visits", "saes"]
 filtered_datasets = {}
 for dataset in datasets:
@@ -128,18 +129,8 @@ for dataset in datasets:
         if_unexpected_values(X, "IgM_RF", neg_pos)
         if_unexpected_values(X, "Swollenjoints28", [f"{i}" for i in range(29)] + ["NA"])
         if_unexpected_values(X, "RA_alert", RA_alert)
-        #"Hosp_dato_slut" - set to 31DEC9999 if continued
-        #"Lag_diagnosis_date_con" - 0 and 1
-#        X['patient_id'] = X['patient_id'].astype(str).str.strip()
-#        for patient in X['patient_id'].unique():
-#            print(patient)
-#            subset = X[X['patient_id'] == patient]
-#            interventions = subset['Forloebs_id'].unique()
-#            if len(interventions) > 1:
-#                print(f"Warning: Multiple interventions found for patient {patient}. Excluding the patient due to multiple diagnosis types.")
-#                patients_multiple_diagnosis.add(patient)
 
-#maybe filter out later when creating additional files
+# Exclude patients with wrong or multiple diagnoses
     if dataset in ["patients", "treatments", "visits", "yearly_visits", "saes", "logistics"]:
         for patient in X['patient_id'].unique():
             if patient in patients_wrong_diagnosis:
@@ -156,8 +147,6 @@ for dataset in datasets:
                 print(f"Warning: Multiple diagnoses found for patient {patient}. Excluding the patient due to multiple diagnosis types.")
                 print(diagnosis)
                 patients_multiple_diagnosis.add(patient)
-#            if not np.isin(diagnosis, RA_diagnosis).all():
-#                patients_wrong_diagnosis.add(patient)
 
 #save to the dictionary
     filtered_datasets[dataset] = X
@@ -176,7 +165,6 @@ with open('../../data/excluded/patients_multiple_diagnosis.txt', 'w') as f:
     f.writelines(f"{patient}\n" for patient in sorted(patients_multiple_diagnosis))
 for dataset_name, dataset in filtered_datasets.items():
         print(f"Excluded entries from dataset: {dataset_name}")
-        #diagnosis
         print("MULTIPLE DIAGNOSIS")
         excluded_multiple = dataset[dataset["patient_id"].isin(patients_multiple_diagnosis)]
         print(excluded_multiple)

@@ -3,9 +3,11 @@
 
 # Import libraries
 import pandas as pd
+import numpy as np
 
 path = "../data/"
 
+# ---- Load in timeline data ---- #
 # Read in the visits.csv
 df_visits = pd.read_csv(path + "visits_filtered.csv", encoding= 'unicode_escape')
 
@@ -18,6 +20,14 @@ df_long = df_visits.melt(
 df_long.rename(columns={'Visit_date': 'Date'}, inplace=True)
 
 del df_visits
+
+# Read in logistics.csv, to get constructed diagnosis date
+df_log = pd.read_csv(path + "logistics_filtered.csv", encoding= 'unicode_escape', usecols=["Diagnosis_date_con", "patient_id"])
+
+df_con = df_log[["patient_id", "Diagnosis_date_con"]].copy().dropna().drop_duplicates()
+df_con = df_con.rename(columns={"Diagnosis_date_con": "Date"})
+df_con["Value"] = df_con["Date"]
+df_con["Event"] = "Diagnosis_date_con"
 
 
 # Read in treatments.csv
@@ -71,23 +81,28 @@ df_sae_stop.columns = ["patient_id", "Date", "Value"]
 df_sae_stop["Event"] = "Sae_stop"
 
 # Combine all the dataframes
-df_long = pd.concat([df_long, df_start, df_stop, df_yr_long, df_sae_start, df_sae_stop], ignore_index=True)
+df_long = pd.concat([df_long, df_start, df_stop, df_yr_long, df_sae_start, df_sae_stop, df_con], ignore_index=True)
 
 # Sort them according to patient, then date, then event
 df_long.sort_values(by=["patient_id", "Date"], inplace=True)
 
-df = df_long
-df['Date'] = pd.to_datetime(df['Date'], format = 'mixed')
+# Control information loss
+count = df_long["patient_id"].nunique()
+print("Number of patients after merging: ")
+print(count)
+
+# Convert Date to datetime
+df_long['Date'] = pd.to_datetime(df_long['Date'], format = '%Y-%m-%d')
 
 # ---- Normalize to MTX ---- #
 # Filter to mtx start events
-mtx_starts = df[(df['Event'] == 'Prescription_start') & (df['Value'].isin(['DMARD_MTX_SC','DMARD_MTX', 'DMARD_MTX_IM']))]
+mtx_starts = df_long[(df_long['Event'] == 'Prescription_start') & (df_long['Value'].isin(['DMARD_MTX_SC','DMARD_MTX', 'DMARD_MTX_IM']))]
 
 # First time each patient took mtx
 first_mtx = (mtx_starts.groupby('patient_id')['Date'].min().rename('first_mtx_date').reset_index())
 
 # Attach first_mtx_date to all rows of that patient
-df_mtx = df.copy().merge(first_mtx, on='patient_id', how='left')
+df_mtx = df_long.copy().merge(first_mtx, on='patient_id', how='left')
 count = df_mtx["patient_id"].nunique()
 print("Number of patients before dropping due to mtx start missing: ")
 print(count)
@@ -100,21 +115,26 @@ df_mtx['months_since_mtx'] = (df_mtx['Date'] - df_mtx['first_mtx_date']) / np.ti
 df_mtx.loc[df_mtx['months_since_mtx'].isnull()].to_csv("../data/normalized_excluded/nan_mtx_date_after_2015.csv")
 df_mtx = df_mtx.dropna(subset=['months_since_mtx'])
 
-#print the amount of patients dropped due to MTX prescription missing
+# Print the amount of patients dropped due to MTX prescription missing
 count = df_mtx["patient_id"].nunique()
 print("Number of patients after the drop: ")
 print(count)
 
+
+# ---- Add diagnosis date ---- #
 # Get diagnosis dates
-df_diag_date = df[df['Event'] == 'Diagnosis_date_con'].copy()
+df_diag_date = df_long[df_long['Event'] == 'Diagnosis_date_con'].copy()
 df_diag_date['Value'] = pd.to_datetime(df_diag_date['Value'])
 
 # Earliest diagnosis date for each patient
 first_diag = df_diag_date.groupby('patient_id')['Value'].min().rename('diagnosis_date').reset_index()
+
 # Attach diagnosis date to all rows of that patient
 df_mtx = df_mtx.merge(first_diag, on='patient_id', how='left')
 
-#print the final amount of patients
+
+# ---- Control information loss and save ---- #
+# Print the final amount of patients
 count = df_mtx["patient_id"].nunique()
 print("Number of patients after adding diagnosis: ")
 print(count)

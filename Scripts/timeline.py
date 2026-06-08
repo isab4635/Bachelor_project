@@ -92,7 +92,7 @@ print("Number of patients after merging: ")
 print(count)
 
 # Convert Date to datetime
-df_long['Date'] = pd.to_datetime(df_long['Date'], format = '%Y-%m-%d')
+df_long['Date'] = pd.to_datetime(df_long['Date'], format = 'mixed')
 
 # ---- Normalize to MTX ---- #
 # Filter to mtx start events

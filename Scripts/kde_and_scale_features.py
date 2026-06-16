@@ -49,28 +49,34 @@ pretty_labels = {
 }
 
 # ---- Plot the distribution of the original features ---- #
-# KDE plots of the original features
+# Histogram plots of the original features
 fig, axes = plt.subplots(3, 4, figsize=(16, 10))
 
-for ax, col in zip(axes.flatten(), num_cols):
-    sb.kdeplot(data=df_features, x=col, fill=True, ax=ax)
+for ax, col in zip(axes.flatten(), num_cols[:11]):
+    sb.histplot(data=df_features, x=col, fill=True, ax=ax)
     ax.set_title(pretty_labels.get(col, col))
 
-plt.suptitle("KDE plots of original numerical features")
+sb.histplot(data=df_features, bins=9, x='mtx_start_year', fill=True, ax=axes.flatten()[11])
+axes.flatten()[11].set_title(pretty_labels.get('mtx_start_year', 'mtx_start_year'))
+
+plt.suptitle("Histograms of original numerical features")
 plt.tight_layout()
-plt.savefig(outdir + "before_norm_kdeplots.png", dpi=300, bbox_inches='tight')
+plt.savefig(outdir + "before_norm_histplots.png", dpi=300, bbox_inches='tight')
 plt.close()
 
-# KDE plots for subset of features
+# Histogram plots for subset of features
 fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
-for ax, col in zip(axes.flatten(), subset_cols):
-    sb.kdeplot(data=df_features, x=col, fill=True, ax=ax)
+for ax, col in zip(axes.flatten(), subset_cols[:5]):
+    sb.histplot(data=df_features, x=col, fill=True, ax=ax)
     ax.set_title(pretty_labels.get(col, col))
 
-plt.suptitle("KDE plots of original numerical features")
+sb.histplot(data=df_features, bins=9, x='mtx_start_year', fill=True, ax=axes.flatten()[5])
+axes.flatten()[5].set_title(pretty_labels.get('mtx_start_year', 'mtx_start_year'))
+
+plt.suptitle("Histograms of original numerical features")
 plt.tight_layout()
-plt.savefig(outdir + "before_norm_kdeplot_subset.png", dpi=300, bbox_inches='tight')
+plt.savefig(outdir + "before_norm_hist_subset.png", dpi=300, bbox_inches='tight')
 plt.close()
 
 
@@ -98,7 +104,7 @@ plt.xticks(ticks=range(len(num_cols)), labels=[pretty_labels.get(col, col) for c
 plt.title("Boxplots of scaled numerical features")
 plt.tight_layout()
 plt.savefig(outdir + "after_norm_boxplots.png", dpi=300, bbox_inches='tight')
-plt.close
+plt.close()
 
 # KDE plots of the scaled features in one plot
 plt.figure(figsize=(14, 6))
@@ -121,16 +127,19 @@ plt.tight_layout()
 plt.savefig(outdir + "after_norm_kdeplots.png", dpi=300, bbox_inches='tight')
 plt.close()
 
-# KDE plots for subset of features
+# Histogram plots for subset of features
 fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
-for ax, col in zip(axes.flatten(), subset_cols):
-    sb.kdeplot(data=scaled_df, x=col, fill=True, ax=ax)
+for ax, col in zip(axes.flatten(), subset_cols[:5]):
+    sb.histplot(data=scaled_df, x=col, fill=True, ax=ax)
     ax.set_title(pretty_labels.get(col, col))
 
-plt.suptitle("KDE plots of scaled numerical features")
+sb.histplot(data=scaled_df, bins=9, x='mtx_start_year', fill=True, ax=axes.flatten()[5])
+axes.flatten()[5].set_title(pretty_labels.get('mtx_start_year', 'mtx_start_year'))
+
+plt.suptitle("Histograms of scaled numerical features")
 plt.tight_layout()
-plt.savefig(outdir + "after_norm_kdeplot_subset.png", dpi=300, bbox_inches='tight')
+plt.savefig(outdir + "after_norm_hist_subset.png", dpi=300, bbox_inches='tight')
 plt.close()
 
 

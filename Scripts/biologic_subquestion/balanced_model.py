@@ -1,62 +1,88 @@
 #!/usr/local/anaconda3-2024.10-1/bin/python3
-# From https://www.geeksforgeeks.org/machine-learning/auc-roc-curve/
-# Baseline models for biologic_added and their evaluation using ROC and PR curves, as well as confusion matrix and other metrics. This is a simple baseline to compare against more complex models later on.
+# Script for training and evaluating balanced versions of the baseline models for biologic_added, including logistic regression, random forest, and decision tree. Evaluation includes ROC and PR curves, as well as confusion matrix and other metrics. 
 
 # Import libraries
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import roc_curve, auc
 
 # Settings
-label = "biologic_added"
 path = "../../data/"
-outdir = "../../results/bio_models/baseline"
+outdir = "../../results/bio_models/balanced/"
+label = 'biologic_added'
 
-# Load train and test data
-df_train = pd.read_csv(path + 'train_filled_feature_table.csv')
-df_test = pd.read_csv(path + 'test_filled_feature_table.csv')
+# Load train and test data scaled
+df_train_sc = pd.read_csv(path + 'scaled_train_feature_table.csv')
+df_test_sc = pd.read_csv(path + 'scaled_test_feature_table.csv')
 
 if label == "mtx_stopped":
-    df_train.drop(columns=["biologic_added"], inplace=True)
-    df_test.drop(columns=["biologic_added"], inplace=True)
+    df_train_sc.drop(columns=["biologic_added"], inplace=True)
+    df_test_sc.drop(columns=["biologic_added"], inplace=True)
 elif label == "biologic_added":
-    df_train.drop(columns=["mtx_stopped"], inplace=True)
-    df_test.drop(columns=["mtx_stopped"], inplace=True)
+    df_train_sc.drop(columns=["mtx_stopped"], inplace=True)
+    df_test_sc.drop(columns=["mtx_stopped"], inplace=True)
 else:
     raise ValueError("Label must be either 'mtx_stopped' or 'biologic_added'")
 
-X_train = df_train.drop(columns=[label])
-y_train = df_train[label]
+X_train_sc = df_train_sc.drop(columns=[label])
+y_train_sc = df_train_sc[label]
 
-X_test = df_test.drop(columns=[label])
-y_test = df_test[label]
+X_test_sc = df_test_sc.drop(columns=[label])
+y_test_sc = df_test_sc[label]
 
-# Training models (logistic and RF and simple decision tree)
-logistic_model = LogisticRegression(random_state=42)
-logistic_model.fit(X_train, y_train)
+# Load train and test data unscaled
+df_train = pd.read_csv(path + 'train_filled_feature_table.csv')
+df_test = pd.read_csv(path + 'test_filled_feature_table.csv')
 
-random_forest_model = RandomForestClassifier(random_state=42)
+df_train.drop(columns=["mtx_stopped"], inplace=True)
+df_test.drop(columns=["mtx_stopped"], inplace=True)
+
+X_train = df_train.drop(columns=["biologic_added"])
+y_train = df_train["biologic_added"]
+
+X_test = df_test.drop(columns=["biologic_added"])
+y_test = df_test["biologic_added"]
+
+#Checking if y scaled and unscaled the same
+if y_train_sc.equals(y_train):
+      print("labels are in order")
+else:
+      raise ValueError("scaled and unscaled label training values unmatched")
+
+if y_train_sc.equals(y_train):
+      print("labels are in order")
+else:
+      raise ValueError("scaled and unscaled label testing values unmatched")
+
+#Improvements to the baseline model
+
+#handling class imbalance
+#https://www.geeksforgeeks.org/machine-learning/how-does-the-classweight-parameter-in-scikit-learn-work/
+
+random_forest_model = RandomForestClassifier(random_state=42, class_weight = "balanced")
 random_forest_model.fit(X_train, y_train)
 
-decision_tree_model = DecisionTreeClassifier(random_state=42)
+decision_tree_model = DecisionTreeClassifier(random_state=42, class_weight = "balanced")
 decision_tree_model.fit(X_train, y_train)
 
-# Get predictions
-y_pred_logistic = logistic_model.predict_proba(X_test)[:, 1]
 y_pred_rf = random_forest_model.predict_proba(X_test)[:, 1]
 y_pred_dt = decision_tree_model.predict_proba(X_test)[:, 1]
+
+logistic_model = LogisticRegression(random_state=42, class_weight = "balanced")
+logistic_model.fit(X_train_sc, y_train_sc)
+
+# Get predictions
+y_pred_logistic = logistic_model.predict_proba(X_test_sc)[:, 1]
 
 # Create dataframe and plot ROCs
 test_df = pd.DataFrame(
     {'True': y_test, 'Logistic': y_pred_logistic, 'RandomForest': y_pred_rf, 'DecisionTree': y_pred_dt})
 
-from sklearn.metrics import roc_curve, auc, precision_score, recall_score, f1_score, confusion_matrix, accuracy_score, precision_recall_curve, average_precision_score
+from sklearn.metrics import precision_recall_curve, average_precision_score
+from sklearn.metrics import roc_curve, auc, precision_score, recall_score, f1_score, confusion_matrix, accuracy_score
 
 # Print additional evalution metrics
 for model in ['Logistic', 'RandomForest', 'DecisionTree']:
@@ -100,5 +126,5 @@ axs[1].set_xlabel('Recall')
 axs[1].set_ylabel('Precision')
 axs[1].set_title('PR Curves for Multiple Models')
 axs[1].legend()
-plt.savefig(outdir + "baseline_roc_pr.png")
+plt.savefig(outdir + "balanced_roc_pr.png")
 plt.close()

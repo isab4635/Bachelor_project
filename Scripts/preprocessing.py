@@ -17,9 +17,9 @@ def if_not_future_date(df, columns):
             unexpected = df.loc[df[column] > '01FEB2026', column].unique()
             print("Unexpected values:")
             print(unexpected)
-#save filtered out patients dataset
+            #save filtered out patients dataset
             future_dates.to_csv(f'../../data/filtered_out/{df.name}/{df.name}_{column}.csv', index=False)
-#change to nan
+            #change to nan
             df.loc[df[column] > '01FEB2026', column] = "NA"
 
 def if_unexpected_values(df, column, expected_values):
@@ -31,13 +31,12 @@ def if_unexpected_values(df, column, expected_values):
         unexpected = df.loc[~mask, column].unique()
         print("Unexpected values:")
         print(unexpected)
-#save filtered out patients dataset
+        #save filtered out patients dataset
         unexpected_values.to_csv(f'../../data/filtered_out/{df.name}/{df.name}_{column}.csv', index=False)
-#change to nan
+        #change to nan
         df.loc[~mask, column] = "NA"
 
-#MASKSSSSSS
-# Keep only patients with RA diagnosis
+# MASKS
 RA_diagnosis = ['DIAGNOSIS_M05_9', 'DIAGNOSIS_M06_0', 'DIAGNOSIS_M06_9'] # df=everywhere but hospitals  #Diagnosis
 review_state = ['private', 'inactive', 'NA'] # df=everywhere but hospitals  #Review_state_patient
 age = [str(i) for i in range(113)] + ["NA"] # df=everywhere but hospitals  #Age_at_diagnosis #the oldest danish person 112
@@ -59,6 +58,7 @@ diagnosis_type = ["Leddegigt", "Psoriasisgigt", "Rygsoejlegigt", "NA"]
 intervention_type = ["Incident", "Praevalent", "Ukendt", "NA"]
 RA_alert = ["INCREASED", "NEVER_POSSIBLE", "NOT_POSSIBLE", "OTHER", "PATIENT_SAY_NO", "nan", "NA"]
 
+# Initialize sets to keep track of patients with multiple or wrong diagnoses
 patients_multiple_diagnosis = set()
 patients_wrong_diagnosis = set()
 
@@ -74,6 +74,7 @@ for dataset in datasets:
 
     if dataset in ["patients", "treatments", "visits", "yearly_visits", "saes", "logistics"]:
         if_not_future_date(X, ["Diagnosis_date"])
+        #masks for test values
         if_unexpected_values(X, "afdeling_skift", department_change)
         if_unexpected_values(X, "Review_state_patient", review_state)
         if_unexpected_values(X, "Age_at_diagnosis", age)
@@ -110,12 +111,14 @@ for dataset in datasets:
 
     if dataset == "saes": #saes dataset
         if_not_future_date(X, ["Sae_start_date", "Sae_stop_date"])
+        #masks for test values
         if_unexpected_values(X, "Sae_number", sae_numbers)
         if_unexpected_values(X, "Sae_cont", sae_cont)
         if_unexpected_values(X, "Sae_relation", sae_relation)
 
     if dataset == "logistics": #logistics dataset
         if_not_future_date(X, ["Diagnosis_date_con", "Min_year_of_status", "Max_year_of_status", "diag_year", "CPR_status_dato", "Kontroldato_RA", "Kontroldato_SpA", "Basmi_date", "Xray_columna_date", "MR_colum_columna_date", "Xray_sacro_joint_date", "MR_sacro_joint_date", "DXA_scanning_date", "CRP_date", "Min_visit_date", "Max_visit_date", "Min_prescription_start_date", "Max_prescription_start_date", "Min_sae_start_date", "Max_sae_start_date", "Hop_dato_start","Vas_patient_pain_seneste_date", "Basdai_seneste_date", "Kontroldato_PsA", "Dato_DAPSA"])        #masks for test values
+        #masks for test values
         if_unexpected_values(X, "Koen", koen)
         if_unexpected_values(X, "Age_at_diag_year", age)
         if_unexpected_values(X, "Diagnosis_type", diagnosis_type)
@@ -130,7 +133,7 @@ for dataset in datasets:
         if_unexpected_values(X, "Swollenjoints28", [f"{i}" for i in range(29)] + ["NA"])
         if_unexpected_values(X, "RA_alert", RA_alert)
 
-# Exclude patients with wrong or multiple diagnoses
+# Find patients with wrong or multiple diagnoses
     if dataset in ["patients", "treatments", "visits", "yearly_visits", "saes", "logistics"]:
         for patient in X['patient_id'].unique():
             if patient in patients_wrong_diagnosis:
@@ -141,16 +144,17 @@ for dataset in datasets:
             diagnosis = subset['Diagnosis'].unique()
             if not np.isin(diagnosis, RA_diagnosis).all():
                 patients_wrong_diagnosis.add(patient)
-                print(f"Warning: Wrong diagnosis found for patient {patient}. Excluding the patient.")
+                print(f"Warning: Wrong diagnosis found for patient {patient}.")
                 print(diagnosis)
             elif len(diagnosis) > 1:
-                print(f"Warning: Multiple diagnoses found for patient {patient}. Excluding the patient due to multiple diagnosis types.")
+                print(f"Warning: Multiple diagnoses found for patient {patient}.")
                 print(diagnosis)
                 patients_multiple_diagnosis.add(patient)
 
-#save to the dictionary
+    #save to the dictionary
     filtered_datasets[dataset] = X
 
+# Save the sets of patients with wrong or multiple diagnoses to text files
 print("////////////////////////////////////////////////////////////////////////////")
 print("DONE FILTERING, MOVING ON TO EXCLUDING WRONG OR MULTIPLE DIAGNOSIS PATIENTS")
 print("WRONG DIAGNOSIS PATIENTS:")
@@ -163,6 +167,8 @@ print(len(patients_multiple_diagnosis))
 print(patients_multiple_diagnosis)
 with open('../../data/excluded/patients_multiple_diagnosis.txt', 'w') as f:
     f.writelines(f"{patient}\n" for patient in sorted(patients_multiple_diagnosis))
+
+# Exclude patients with wrong or multiple diagnoses from the datasets and save the filtered datasets
 for dataset_name, dataset in filtered_datasets.items():
         print(f"Excluded entries from dataset: {dataset_name}")
         print("MULTIPLE DIAGNOSIS")

@@ -14,18 +14,18 @@ path = "../data/"
 # Open the feature table
 df_features = pd.read_csv(path + 'filled_feature_table.csv')
 
-df_mtx_stop = df_features[df_features["mtx_success"] == 0]
-df_mtx_con = df_features[df_features["mtx_success"] == 1]
+df_mtx_stop = df_features[df_features["mtx_stopped"] == 1]
+df_mtx_con = df_features[df_features["mtx_stopped"] == 0]
 df_no_bio = df_features[df_features["biologic_added"] == 0]
 df_bio = df_features[df_features["biologic_added"] == 1]
 
 results_categorical = []
 
 # Chi2 test (Method 7.20 in stat enotes)
-data = df_features[["mtx_success", "biologic_added"]].dropna()
+data = df_features[["mtx_stopped", "biologic_added"]].dropna()
 print(len(data))
 try:
-        contingency_table = pd.crosstab(data["mtx_success"], data["biologic_added"])
+        contingency_table = pd.crosstab(data["mtx_stopped"], data["biologic_added"])
         print(contingency_table)
         chi2, p_val, dof, expected = stats.chi2_contingency(contingency_table)
         print(f"Expected: {expected}")
@@ -40,15 +40,15 @@ upper_95_CI = math.exp(math.log(OR) + 1.96* math.sqrt(1/contingency_table.loc[1,
 lower_95_CI = math.exp(math.log(OR) - 1.96* math.sqrt(1/contingency_table.loc[1, 1] + 1/contingency_table.loc[1, 0] + 1/contingency_table.loc[0, 1] + 1/contingency_table.loc[0, 0]))
 
 # Get proportions of fail and success for each category
-count_bio_added_mtx_stopped = contingency_table.loc[0, 1]
-count_no_bio_mtx_stopped = contingency_table.loc[0, 0]
+count_bio_added_mtx_stopped = contingency_table.loc[1, 1]
+count_no_bio_mtx_stopped = contingency_table.loc[1, 0]
 
-count_mtx_con_bio_added = contingency_table.loc[1, 1]
-count_mtx_stop_bio_added = contingency_table.loc[0, 1]
+count_mtx_con_bio_added = contingency_table.loc[0, 1]
+count_mtx_stop_bio_added = contingency_table.loc[1, 1]
 
 # Percentages within feature == 1
-pct_bio = 100 * count_bio_added_mtx_stopped / contingency_table.loc[0, :].sum()
-pct_no_bio = 100 * count_no_bio_mtx_stopped / contingency_table.loc[0, :].sum()
+pct_bio = 100 * count_bio_added_mtx_stopped / contingency_table.loc[1, :].sum()
+pct_no_bio = 100 * count_no_bio_mtx_stopped / contingency_table.loc[1, :].sum()
 
 pct_mtx_con = 100 * count_mtx_con_bio_added / contingency_table.loc[:, 1].sum()
 pct_mtx_stop = 100 * count_mtx_stop_bio_added / contingency_table.loc[:, 1].sum()

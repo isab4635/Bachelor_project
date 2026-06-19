@@ -1,7 +1,6 @@
 #!/usr/local/anaconda3-2024.10-1/bin/python3
 
 # Import libraries
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import GradientBoostingClassifier
@@ -64,7 +63,7 @@ param_dist_logistic = {
 
 param_dist_rf = {
     "n_estimators": [100, 200, 300, 500],
-        "max_depth": [3, 5, 10, None],
+    "max_depth": [3, 5, 10, None],
     "min_samples_leaf": [1, 5, 10],
     "criterion": ["gini", "entropy"]
 }

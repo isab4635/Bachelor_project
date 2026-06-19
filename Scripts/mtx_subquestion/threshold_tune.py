@@ -48,16 +48,16 @@ y_train = y_train.drop(index=y_val.index)
 
 
 # ---- Training models ---- #
-logistic_model = LogisticRegression(random_state=42, C=0.1, class_weight="balanced")
+logistic_model = LogisticRegression(random_state=42, C=0.01, class_weight="balanced")
 logistic_model.fit(X_train, y_train)
 
 random_forest_model = RandomForestClassifier(random_state=42, n_estimators=200, min_samples_leaf=10, max_depth=5, criterion="entropy")
 random_forest_model.fit(X_train, y_train)
 
-decision_tree_model = DecisionTreeClassifier(random_state=42, min_samples_leaf=5, max_depth=5, criterion="entropy")
+decision_tree_model = DecisionTreeClassifier(random_state=42, min_samples_leaf=1, max_depth=3, criterion="gini")
 decision_tree_model.fit(X_train, y_train)
 
-gbc = GradientBoostingClassifier(random_state=42, subsample=1, learning_rate=0.05, n_estimators=100, min_samples_leaf=1, max_depth=3)
+gbc = GradientBoostingClassifier(random_state=42, subsample=1, learning_rate=0.01, n_estimators=100, min_samples_leaf=5, max_depth=3)
 gbc.fit(X_train, y_train)
 
 # Get predictions

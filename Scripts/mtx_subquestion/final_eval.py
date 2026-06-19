@@ -67,6 +67,25 @@ logistic_model.fit(X_train, y_train)
 random_forest_model = RandomForestClassifier(random_state=42, n_estimators=200, min_samples_leaf=10, max_depth=5, criterion="entropy")
 random_forest_model.fit(X_train, y_train)
 
+# ---- Feature importance plot for logistic regression ---- #
+importances = logistic_model.coef_[0]
+# Sort feature importances in descending order
+indices = np.argsort(np.abs(importances))[::-1]
+
+# Rearrange feature names so they match the sorted feature importances
+names = [X_train.columns[i] for i in indices]
+pretty_names = [pretty_labels[name] for name in names]
+
+# Create plot
+plt.figure(figsize=(7, 5))
+plt.title("Feature Coefficients for Logistic Regression")
+plt.bar(range(X_train.shape[1]), importances[indices])
+plt.xticks(range(X_train.shape[1]), pretty_names, rotation=450)
+plt.xlabel("Features")
+plt.ylabel("Coefficient Value")
+plt.tight_layout()
+plt.savefig(outdir + "feature_importances_logistic.png")
+plt.close()
 
 # ---- Feature importance plot for random forest ---- #
 importances = random_forest_model.feature_importances_

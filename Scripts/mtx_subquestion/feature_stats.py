@@ -173,33 +173,3 @@ table_ax.scale(1.2, 2)
 plt.title('Statistical differences of binary features', fontsize=16, pad=20)
 plt.savefig(outdir + 'table_stat_diff_binary.png', dpi=300, bbox_inches='tight', facecolor='white')
 plt.close()
-
-# ---- Correlation heatmaps ---- #
-corr = df_features[numerical_cols].corr(method="pearson")
-sb.heatmap(corr, annot=True, annot_kws={'size': 8}, cmap="coolwarm", center=0)
-plt.title("Correlation Matrix (Pearson)")
-plt.tight_layout()
-plt.savefig(outdir + "corr_matrix_pearson.png", dpi=300, bbox_inches='tight')
-plt.close()
-
-corr = df_features[numerical_cols].corr(method="spearman")
-sb.heatmap(corr, annot=True, annot_kws={'size': 8}, cmap="coolwarm", center=0)
-plt.title("Correlation Matrix (Spearman)")
-plt.tight_layout()
-plt.savefig(outdir + "corr_matrix_spearman.png", dpi=300, bbox_inches='tight')
-plt.close()
-
-# ---- Correlation heatmaps ---- #
-corr = df_features[numerical_cols].corr(method="pearson")
-sb.heatmap(corr, annot=True, annot_kws={'size': 8}, cmap="coolwarm", center=0)
-plt.title("Correlation Matrix (Pearson)")
-plt.tight_layout()
-plt.savefig(outdir + "corr_matrix_pearson.png", dpi=300, bbox_inches='tight')
-plt.close()
-
-corr = df_features[numerical_cols].corr(method="spearman")
-sb.heatmap(corr, annot=True, annot_kws={'size': 8}, cmap="coolwarm", center=0)
-plt.title("Correlation Matrix (Spearman)")
-plt.tight_layout()
-plt.savefig(outdir + "corr_matrix_spearman.png", dpi=300, bbox_inches='tight')
-plt.close()

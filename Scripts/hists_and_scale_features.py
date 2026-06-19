@@ -82,8 +82,7 @@ plt.close()
 
 # ---- Scale and normalize the numerical features ---- #
 # Skewed columns to log-transform
-#skewed = ['CRP', 'Swollenjoints28', 'CDAI', 'SDAI', 'MDHAQ', 'Vas_doctor']
-skewed = ['CRP']
+skewed = ['CRP', 'Swollenjoints28', 'MDHAQ']
 df_features[skewed] = df_features[skewed].apply(lambda x: np.log1p(x))
 df_test[skewed] = df_test[skewed].apply(lambda x: np.log1p(x))
 

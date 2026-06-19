@@ -14,7 +14,7 @@ from math import log, log1p
 # Settings
 label = "biologic_added"
 path = "../../data/"
-outdir = "../../results/bio_models/threshold/"
+outdir = "../../results/bio_models/"
 
 # Load train and test data
 df_train = pd.read_csv(path + 'train_filled_feature_table.csv')

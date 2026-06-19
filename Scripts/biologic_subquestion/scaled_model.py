@@ -12,7 +12,7 @@ from sklearn.metrics import roc_curve, auc
 # Settings
 label = 'biologic_added'
 path = "../../data/"
-outdir = "../../results/bio_models/scaled/"
+outdir = "../../results/bio_models/"
 
 # Load train and test data - scaled version
 df_train = pd.read_csv(path + 'scaled_train_feature_table.csv')

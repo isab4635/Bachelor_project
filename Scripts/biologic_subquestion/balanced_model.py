@@ -11,7 +11,7 @@ from sklearn.metrics import roc_curve, auc
 
 # Settings
 path = "../../data/"
-outdir = "../../results/bio_models/balanced/"
+outdir = "../../results/bio_models/"
 label = 'biologic_added'
 
 # Load train and test data scaled

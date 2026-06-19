@@ -13,7 +13,7 @@ from sklearn.metrics import roc_curve, auc, precision_score, recall_score, f1_sc
 
 # Settings
 path = "../../data/"
-outdir = "../../results/bio_models/boost/"
+outdir = "../../results/bio_models/"
 label = 'biologic_added'
 
 # Load train and test data scaled

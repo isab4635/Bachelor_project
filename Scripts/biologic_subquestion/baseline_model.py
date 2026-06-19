@@ -16,7 +16,7 @@ from sklearn.metrics import roc_curve, auc
 # Settings
 label = "biologic_added"
 path = "../../data/"
-outdir = "../../results/bio_models/baseline"
+outdir = "../../results/bio_models/"
 
 # Load train and test data
 df_train = pd.read_csv(path + 'train_filled_feature_table.csv')
